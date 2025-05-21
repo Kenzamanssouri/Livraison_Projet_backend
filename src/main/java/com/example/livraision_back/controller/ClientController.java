@@ -3,7 +3,7 @@ package com.example.livraision_back.controller;
 import com.example.livraision_back.dto.ClientDTO;
 import com.example.livraision_back.model.Client;
 import com.example.livraision_back.service.ClientService;
-import com.example.livraision_back.service.OtpService;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,11 +19,9 @@ import java.util.List;
 public class ClientController {
 
     private final ClientService clientService;
-    private final OtpService otpService;
 
-    public ClientController(ClientService clientService, OtpService otpService) {
+    public ClientController(ClientService clientService) {
         this.clientService = clientService;
-        this.otpService = otpService;
     }
 
 

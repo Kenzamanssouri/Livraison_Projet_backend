@@ -5,7 +5,7 @@ import com.example.livraision_back.model.Notification;
 import com.example.livraision_back.model.Vendeur;
 import com.example.livraision_back.repository.NotificationRepository;
 import com.example.livraision_back.service.VendeurService;
-import com.example.livraision_back.service.OtpService;
+import com.example.livraision_back.service.impl.EmailService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,12 +21,12 @@ import java.util.List;
 public class VendeurController {
     private final VendeurService clientService;
     private final NotificationRepository notificationRepository;
-    private final OtpService otpService;
+    private final EmailService emailService;
 
-    public VendeurController(VendeurService clientService, NotificationRepository notificationRepository, OtpService otpService) {
+    public VendeurController(VendeurService clientService, NotificationRepository notificationRepository, EmailService emailService) {
         this.clientService = clientService;
         this.notificationRepository = notificationRepository;
-        this.otpService = otpService;
+        this.emailService = emailService;
     }
 
 
@@ -100,6 +100,8 @@ public class VendeurController {
         if (client != null) {
             client.setEstValideParAdmin(true);
             clientService.save(client);
+            emailService.sendValidationEmail(client.getEmail(), client.getNom());
+
             return new ResponseEntity<>(client, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

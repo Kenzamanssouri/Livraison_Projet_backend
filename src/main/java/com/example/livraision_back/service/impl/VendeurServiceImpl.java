@@ -20,7 +20,6 @@ public class VendeurServiceImpl implements VendeurService {
 
     private final VendeurRepository clientRepository;
     private final PasswordEncoder passwordEncoder;
-
     public VendeurServiceImpl(VendeurRepository clientRepository,
                               PasswordEncoder passwordEncoder) {
         this.clientRepository = clientRepository;
