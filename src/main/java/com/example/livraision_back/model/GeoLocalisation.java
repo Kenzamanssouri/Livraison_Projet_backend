@@ -6,8 +6,8 @@ import lombok.Data;
 @Embeddable
 @Data
 public class GeoLocalisation {
-    private double latitude;
-    private double longitude;
+    private Double latitude;
+    private Double longitude;
 
     // Getters and Setters
 }

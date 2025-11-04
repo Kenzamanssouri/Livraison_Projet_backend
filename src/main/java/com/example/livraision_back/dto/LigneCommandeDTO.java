@@ -6,7 +6,7 @@ import java.util.List;
 @Data
 public class LigneCommandeDTO {
     private Long id;
-    private Long produitId;
+    private ProduitDTO produit;
     private int quantite;
     private double prixUnitaire;
     private List<String> optionsChoisies;

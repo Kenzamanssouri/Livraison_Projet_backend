@@ -20,4 +20,17 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+
+    public void sendRefusEmail(String toEmail, String vendeurNom,String motif) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Rejet de votre compte vendeur");
+        message.setText("Bonjour " + vendeurNom + ",\n\n" +
+            "Votre compte vendeur a été reeté par l’administrateur.\n\n" +
+            "pour la raison suivante :"+motif+",\n\n" +
+            "Cordialement,\nL'équipe de livraison");
+
+        mailSender.send(message);
+    }
 }

@@ -18,5 +18,7 @@ public abstract class UtilisateurDTO {
     protected String ville;
 
     protected java.time.LocalDateTime resetCodeExpiry;
+    protected String deviceToken; // 🔥 Ajout important
+
 }
 

@@ -10,15 +10,17 @@ import java.util.List;
 @Data
 public class CommandeDTO {
     private Long id;
-    private Long clientId;
-    private Long vendeurId;
-    private Long livreurId;
+
+    private ClientDTO client;
+    private VendeurDTO vendeur;
+    private LivreurDTO livreur;
     private LocalDateTime dateCommande;
     private LocalDateTime dateLivraisonEstimee;
     private StatutCommande statut;
     private List<LigneCommandeDTO> lignes;
-    private AdresseDTO livraisonAdresse;
+    private String livraisonAdresse;
     private TrackingCommandeDTO tracking;
     private double total;
     private String modePaiement;
+
 }

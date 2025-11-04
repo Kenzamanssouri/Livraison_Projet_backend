@@ -14,5 +14,6 @@ public class Notification {
     private String message;
     private Long idObject;
     private String Object;
+    private Boolean opened = false; // <-- New field
 
 }

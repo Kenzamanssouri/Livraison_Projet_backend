@@ -13,7 +13,7 @@ public class Vendeur extends Utilisateur {
     private String registreCommerce;
     private String identifiantFiscal;
     private String rib;
-    private boolean estValideParAdmin;
+    private Boolean estValideParAdmin;
     private String motifRejet;
     @Embedded
     private Horaire horaireOuverture;
@@ -24,6 +24,7 @@ public class Vendeur extends Utilisateur {
     @OneToMany(mappedBy = "vendeur")
     private List<Commande> commandes;
 
+    private Boolean bloque;                 // Livreur bloqué s’il ne régularise pas
 
     // Getters and Setters
     public List<Produit> getProduits() {

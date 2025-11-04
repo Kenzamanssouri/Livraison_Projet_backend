@@ -9,22 +9,24 @@ public abstract class Utilisateur {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
+
     protected String nom;
     protected String prenom;
-    @Column(unique = true) // 👈 make email unique
 
+    @Column(unique = true)
     protected String email;
-    @Column(unique = true) // 👈 make login unique
 
+    @Column(unique = true)
     protected String login;
+
     protected String motDePasse;
     protected String telephone;
     protected String adresse;
     protected String ville;
-    protected RoleUtilisateur role; // CLIENT, VENDEUR, LIVREUR,ADMIN
+    protected RoleUtilisateur role;
     protected String resetCode;
-
     protected java.time.LocalDateTime resetCodeExpiry;
 
-    // Getters and Setters
+    // ✅ Champ pour notifications push Firebase
+    protected String deviceToken; // 🔥 Ajout important
 }

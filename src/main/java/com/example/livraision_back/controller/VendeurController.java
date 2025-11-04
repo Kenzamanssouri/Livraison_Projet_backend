@@ -33,6 +33,7 @@ public class VendeurController {
     // CREATE
     @PostMapping
     public ResponseEntity<?> createVendeur(@RequestBody Vendeur clientDTO) {
+        clientDTO.setEstValideParAdmin(null);
         // Check if a client already exists with this email
         boolean exists = clientService.existsByEmail(clientDTO.getEmail());
 
@@ -75,12 +76,15 @@ public class VendeurController {
     public ResponseEntity<Page<Vendeur>> getVendeursPaged(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size,
-        @RequestParam(defaultValue = "id") String sortBy
+        @RequestParam(defaultValue = "id") String sortBy,
+        @RequestParam(defaultValue = "desc") String sortDir // ← Ajouté
     ) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
         Page<Vendeur> clientsPage = clientService.findAll(pageable);
         return new ResponseEntity<>(clientsPage, HttpStatus.OK);
     }
+
 
     // READ - Get client by ID
     @GetMapping("/{id}")
@@ -101,20 +105,20 @@ public class VendeurController {
             client.setEstValideParAdmin(true);
             clientService.save(client);
             emailService.sendValidationEmail(client.getEmail(), client.getNom());
-
             return new ResponseEntity<>(client, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-    }// refuse
+    }
+    // refuse
     @GetMapping("/{id}/refuse/{motif}")
     public ResponseEntity<Vendeur> refiuseVendeurById(@PathVariable Long id,@PathVariable String motif) {
         Vendeur client = clientService.findById(id);
-
         if (client != null) {
             client.setEstValideParAdmin(false);
             client.setMotifRejet(motif);
             clientService.save(client);
+            emailService.sendRefusEmail(client.getEmail(), client.getNom(),motif);
             return new ResponseEntity<>(client, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

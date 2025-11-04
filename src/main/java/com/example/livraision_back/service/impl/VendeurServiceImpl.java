@@ -83,7 +83,7 @@ public class VendeurServiceImpl implements VendeurService {
             existingVendeur.setRegistreCommerce(clientDTO.getRegistreCommerce());
             existingVendeur.setIdentifiantFiscal(clientDTO.getIdentifiantFiscal());
             existingVendeur.setRib(clientDTO.getRib());
-            existingVendeur.setEstValideParAdmin(clientDTO.isEstValideParAdmin());
+            existingVendeur.setEstValideParAdmin(clientDTO.getEstValideParAdmin());
 
             // Mise à jour de l'horaire d'ouverture s'il existe
             if (clientDTO.getHoraireOuverture() != null) {
@@ -123,7 +123,7 @@ public class VendeurServiceImpl implements VendeurService {
             .and(VendeurSpecification.hasRegistreCommerce(filter.getRegistreCommerce()))
             .and(VendeurSpecification.hasIdentifiantFiscal(filter.getIdentifiantFiscal()))
             .and(VendeurSpecification.hasRib(filter.getRib()))
-            .and(VendeurSpecification.isValideParAdmin(filter.isEstValideParAdmin()));
+            .and(VendeurSpecification.isValideParAdmin(filter.getEstValideParAdmin()));
 
         return clientRepository.findAll(spec, pageable);
     }

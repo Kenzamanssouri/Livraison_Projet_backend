@@ -31,8 +31,7 @@ public class Commande {
     @OneToMany(cascade = CascadeType.ALL)
     private List<LigneCommande> lignes;
 
-    @Embedded
-    private Adresse livraisonAdresse;
+   private String livraisonAdresse;
 
     @OneToOne(cascade = CascadeType.ALL)
     private TrackingCommande tracking;

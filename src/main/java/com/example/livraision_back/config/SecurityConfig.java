@@ -64,7 +64,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/clients/**", "/api/vendeurs/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/pieces-justificatives-vendeurs/**","/api/notification/**")
+                .requestMatchers("/api/auth/**","/api/uploadPj1/**", "/api/clients/**", "/api/vendeurs/**", "/api/livreurs/**", "/api/commandes/**", "/api/utilisateurs/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/pieces-justificatives-vendeurs/**","/api/notification/**")
                 .permitAll()
                 .anyRequest().authenticated()
             )
@@ -76,16 +76,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+
+        // ⚡ Définit explicitement l'origine autorisée
+        config.setAllowedOrigins(List.of("http://localhost:8081"));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(true); // ⚠️ peut rester true si origine explicite
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
 
     // CompositeAuthenticationProvider to combine Admin and Client Authentication Providers
     public static class CompositeAuthenticationProvider implements AuthenticationProvider {

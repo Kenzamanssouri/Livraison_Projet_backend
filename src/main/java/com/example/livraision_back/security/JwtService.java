@@ -11,7 +11,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "your-secret-key-should-be-very-secure-and-long"; // 🔐 Replace with a long random string
+    private final String SECRET_KEY = "k8Fj3$9vB2rQ!zW1xP6mN4sT0yH7uL5eVwR2cG1aZqX8dYtC";
 
     private Key getSignInKey() {
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
