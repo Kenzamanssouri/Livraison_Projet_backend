@@ -19,4 +19,5 @@ public interface LivreurService {
     boolean delete(Long id);
 
     boolean existsByEmail(String email);
+    boolean existsByLogin(String login);
 }

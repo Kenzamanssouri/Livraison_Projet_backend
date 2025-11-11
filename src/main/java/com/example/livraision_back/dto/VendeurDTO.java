@@ -14,7 +14,7 @@ public class VendeurDTO extends UtilisateurDTO {
     private Boolean estValideParAdmin;
     private String motifRejet;
 
-    private HoraireDTO horaireOuverture;
+    private List<HoraireDTO> horairesOuverture;
     private List<Long> produitIds;
     private List<Long> commandeIds;
     private Boolean bloque;                 // Livreur bloqué s’il ne régularise pas

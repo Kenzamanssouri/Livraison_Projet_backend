@@ -27,7 +27,7 @@ public class PieceJointeController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<PieceJointe> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("Id") Long Id, String typePjPlanAction) {
+    public ResponseEntity<PieceJointe> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("Id") Long Id, @RequestParam("typePjPlanAction") String typePjPlanAction) {
         try {
             PieceJointe savedPj = pieceJointeService.saveFile(file,Id,typePjPlanAction);
             return ResponseEntity.ok(savedPj);

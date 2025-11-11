@@ -14,8 +14,9 @@ import java.util.Optional;
 public interface LivreurRepository extends JpaRepository<Livreur, Long> {
     Optional<Livreur> findByLogin(String login);
     boolean existsByEmail(String email);
+    boolean existsByLogin(String login);
 
-    List<Livreur> findAllByEstValideParAdminIsNull();
+    List<Livreur> findAllByEstValideParAdminIsNullOrEstValideParAdminFalse();
 
 
 }

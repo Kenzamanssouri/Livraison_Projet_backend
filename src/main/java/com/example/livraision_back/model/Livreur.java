@@ -27,6 +27,7 @@ public class Livreur extends Utilisateur {
 
     // 💰 Dépôt de garantie versé à l’inscription
     private Double depotGarantie;
+    private String matriculeVehicule;
 
     /**
      * Solde net = commission - encaissements

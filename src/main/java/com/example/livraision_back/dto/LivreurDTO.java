@@ -23,6 +23,7 @@ public class LivreurDTO extends UtilisateurDTO {
 
     private double soldeNet;                   // Commission - encaissements
     private double soldeAvecDepot;             // Solde net + dépôt de garantie
+    private String matriculeVehicule;
 
     public boolean isDisponible() {
         return disponible;

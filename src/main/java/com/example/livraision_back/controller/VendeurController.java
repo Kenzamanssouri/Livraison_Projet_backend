@@ -1,6 +1,9 @@
 package com.example.livraision_back.controller;
 
+import com.example.livraision_back.dto.HoraireDTO;
 import com.example.livraision_back.dto.VendeurDTO;
+import com.example.livraision_back.model.CategorieVendeur;
+import com.example.livraision_back.model.Horaire;
 import com.example.livraision_back.model.Notification;
 import com.example.livraision_back.model.Vendeur;
 import com.example.livraision_back.repository.NotificationRepository;
@@ -14,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -32,25 +36,77 @@ public class VendeurController {
 
     // CREATE
     @PostMapping
-    public ResponseEntity<?> createVendeur(@RequestBody Vendeur clientDTO) {
+    public ResponseEntity<?> createVendeur(@RequestBody VendeurDTO clientDTO) {
         clientDTO.setEstValideParAdmin(null);
-        // Check if a client already exists with this email
-        boolean exists = clientService.existsByEmail(clientDTO.getEmail());
 
+        // Vérifie si un client existe déjà avec le même email
+        boolean exists = clientService.existsByEmail(clientDTO.getEmail());
         if (exists) {
             return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body("An account with this email already exists.");
         }
 
-        Vendeur savedVendeur = clientService.save(clientDTO);
-        Notification notification=new Notification();
-        notification.setMessage("le vendeur "+savedVendeur.getNom()+" "+savedVendeur.getPrenom()+" est crée");
+        // Création de l'entité Vendeur
+        Vendeur vendeur = new Vendeur();
+        vendeur.setNom(clientDTO.getNom());
+        vendeur.setPrenom(clientDTO.getPrenom());
+        vendeur.setEmail(clientDTO.getEmail());
+        vendeur.setLogin(clientDTO.getLogin());
+        vendeur.setMotDePasse(clientDTO.getMotDePasse()); // Encode si nécessaire
+        vendeur.setTelephone(clientDTO.getTelephone());
+        vendeur.setAdresse(clientDTO.getAdresse());
+        vendeur.setVille(clientDTO.getVille());
+        vendeur.setRole(clientDTO.getRole());
+
+        // Champs spécifiques Vendeur
+        vendeur.setNomEtablissement(clientDTO.getNomEtablissement());
+        if (clientDTO.getCategorie() != null) {
+            try {
+                vendeur.setCategorie(CategorieVendeur.valueOf(
+                    clientDTO.getCategorie()
+                        .toUpperCase()
+                        .replace("É", "E")
+                        .replace("È", "E")
+                        .replace("À", "A")
+                        .replace(" ", "_")
+                ));
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body("Catégorie vendeur invalide : " + clientDTO.getCategorie());
+            }
+        }
+        vendeur.setRegistreCommerce(clientDTO.getRegistreCommerce());
+        vendeur.setIdentifiantFiscal(clientDTO.getIdentifiantFiscal());
+        vendeur.setRib(clientDTO.getRib());
+        vendeur.setEstValideParAdmin(clientDTO.getEstValideParAdmin());
+
+        // Gestion des horaires multiples
+        if (clientDTO.getHorairesOuverture() != null) {
+            List<Horaire> horaires = new ArrayList<>();
+            for (HoraireDTO dto : clientDTO.getHorairesOuverture()) {
+                Horaire h = new Horaire();
+                h.setJour(dto.getJour());
+                h.setHeureOuverture(dto.getHeureOuverture());
+                h.setHeureFermeture(dto.getHeureFermeture());
+                h.setVendeur(vendeur); // lien bidirectionnel
+                horaires.add(h);
+            }
+            vendeur.setHorairesOuverture(horaires);
+        }
+
+        // Sauvegarde du vendeur
+        Vendeur savedVendeur = clientService.save(vendeur);
+
+        // Notification
+        Notification notification = new Notification();
+        notification.setMessage("Le vendeur " + savedVendeur.getNom() + " " + savedVendeur.getPrenom() + " est créé");
         notification.setIdObject(savedVendeur.getId());
         notification.setObject("Vendeur");
         notificationRepository.save(notification);
+
         return new ResponseEntity<>(savedVendeur, HttpStatus.CREATED);
     }
+
 
     /**
      * Format a Moroccan phone number to international format.

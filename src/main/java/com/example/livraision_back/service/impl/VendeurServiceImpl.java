@@ -1,6 +1,8 @@
 package com.example.livraision_back.service.impl;
 
+import com.example.livraision_back.dto.HoraireDTO;
 import com.example.livraision_back.dto.VendeurDTO;
+import com.example.livraision_back.model.CategorieVendeur;
 import com.example.livraision_back.model.Horaire;
 import com.example.livraision_back.model.Vendeur;
 import com.example.livraision_back.repository.VendeurRepository;
@@ -79,21 +81,45 @@ public class VendeurServiceImpl implements VendeurService {
 
             // Champs spécifiques à Vendeur
             existingVendeur.setNomEtablissement(clientDTO.getNomEtablissement());
-            existingVendeur.setCategorie(clientDTO.getCategorie());
+
+            if (clientDTO.getCategorie() != null) {
+                try {
+                    existingVendeur.setCategorie(CategorieVendeur.valueOf(
+                        clientDTO.getCategorie()
+                            .toUpperCase()
+                            .replace("É", "E")
+                            .replace("È", "E")
+                            .replace("À", "A")
+                            .replace(" ", "_")
+                    ));
+                } catch (IllegalArgumentException e) {
+                    throw new RuntimeException("Catégorie vendeur invalide : " + clientDTO.getCategorie());
+                }
+            }
+
             existingVendeur.setRegistreCommerce(clientDTO.getRegistreCommerce());
             existingVendeur.setIdentifiantFiscal(clientDTO.getIdentifiantFiscal());
             existingVendeur.setRib(clientDTO.getRib());
             existingVendeur.setEstValideParAdmin(clientDTO.getEstValideParAdmin());
 
-            // Mise à jour de l'horaire d'ouverture s'il existe
-            if (clientDTO.getHoraireOuverture() != null) {
-                Horaire horaire = new Horaire();
-                horaire.setJour(clientDTO.getHoraireOuverture().getJour());
-                horaire.setHeureOuverture(clientDTO.getHoraireOuverture().getHeureOuverture());
-                horaire.setHeureFermeture(clientDTO.getHoraireOuverture().getHeureFermeture());
-                existingVendeur.setHoraireOuverture(horaire);
+            // -------------------------------
+            // Mise à jour des horaires
+            // -------------------------------
+            if (clientDTO.getHorairesOuverture() != null) {
+                // Supprime les anciens horaires
+                existingVendeur.getHorairesOuverture().clear();
+
+                // Crée et ajoute les nouveaux horaires
+                for (HoraireDTO dto : clientDTO.getHorairesOuverture()) {
+                    Horaire h = new Horaire();
+                    h.setJour(dto.getJour());
+                    h.setHeureOuverture(dto.getHeureOuverture());
+                    h.setHeureFermeture(dto.getHeureFermeture());
+                    h.setVendeur(existingVendeur);
+                    existingVendeur.getHorairesOuverture().add(h);
+                }
             } else {
-                existingVendeur.setHoraireOuverture(null);
+                existingVendeur.getHorairesOuverture().clear();
             }
 
             return clientRepository.save(existingVendeur);
@@ -101,6 +127,7 @@ public class VendeurServiceImpl implements VendeurService {
             return null;
         }
     }
+
 
     @Override
     public boolean delete(Long id) {

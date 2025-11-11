@@ -8,6 +8,22 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface HoraireMapper {
     @Named("toDTO") // Add this annotation
-    HoraireDTO toDTO(Horaire horaire);
-    Horaire toEntity(HoraireDTO dto);
+    private HoraireDTO toHoraireDTO(Horaire horaire) {
+        if (horaire == null) return null;
+        HoraireDTO dto = new HoraireDTO();
+        dto.setJour(horaire.getJour());
+        dto.setHeureOuverture(horaire.getHeureOuverture());
+        dto.setHeureFermeture(horaire.getHeureFermeture());
+        return dto;
+    }
+
+    private Horaire toHoraireEntity(HoraireDTO dto) {
+        if (dto == null) return null;
+        Horaire h = new Horaire();
+        h.setJour(dto.getJour());
+        h.setHeureOuverture(dto.getHeureOuverture());
+        h.setHeureFermeture(dto.getHeureFermeture());
+        return h;
+    }
+
 }

@@ -1,7 +1,10 @@
 package com.example.livraision_back.controller;
 
 import com.example.livraision_back.dto.LivreurDTO;
+import com.example.livraision_back.mapper.LivreurMapper;
+import com.example.livraision_back.model.GeoLocalisation;
 import com.example.livraision_back.model.Livreur;
+import com.example.livraision_back.model.Notification;
 import com.example.livraision_back.model.Vendeur;
 import com.example.livraision_back.repository.NotificationRepository;
 import com.example.livraision_back.service.LivreurService;
@@ -24,6 +27,70 @@ public class LivreurController {
         this.clientService = clientService;
         this.notificationRepository = notificationRepository;
         this.emailService = emailService;
+    }
+    @PostMapping
+    public ResponseEntity<?> createLivreur(@RequestBody LivreurDTO livreurDTO) {
+
+        // Vérifie si un compte existe déjà avec le même email
+        boolean emailExists = clientService.existsByEmail(livreurDTO.getEmail());
+        if (emailExists) {
+            return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body("Un compte avec cet email existe déjà.");
+        }
+
+        // Vérifie si un compte existe déjà avec le même login
+        boolean loginExists = clientService.existsByLogin(livreurDTO.getLogin());
+        if (loginExists) {
+            return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body("Un compte avec ce login existe déjà.");
+        }
+
+        // Création de l'entité Livreur
+        Livreur livreur = new Livreur();
+        livreur.setNom(livreurDTO.getNom());
+        livreur.setPrenom(livreurDTO.getPrenom());
+        livreur.setLogin(livreurDTO.getLogin());
+        livreur.setEmail(livreurDTO.getEmail());
+        livreur.setTelephone(livreurDTO.getTelephone());
+        livreur.setAdresse(livreurDTO.getAdresse());
+        livreur.setVille(livreurDTO.getVille());
+        livreur.setRole(livreurDTO.getRole());
+        livreur.setMotDePasse(livreurDTO.getMotDePasse()); // Encode si nécessaire
+
+        // Champs spécifiques au livreur
+        livreur.setDisponible(livreurDTO.isDisponible());
+        if (livreurDTO.getPositionActuelle() != null) {
+            GeoLocalisation position = new GeoLocalisation();
+            position.setLatitude(livreurDTO.getPositionActuelle().getLatitude());
+            position.setLongitude(livreurDTO.getPositionActuelle().getLongitude());
+            livreur.setPositionActuelle(position);
+        }
+
+        livreur.setBloque(livreurDTO.isBloque());
+        livreur.setEstValideParAdmin(livreurDTO.getEstValideParAdmin());
+        livreur.setMotifRejet(livreurDTO.getMotifRejet());
+        livreur.setDepotGarantie(livreurDTO.getDepotGarantie());
+
+        // Commission et encaissements initialisés à 0 si null
+        livreur.setCommissionTotale(livreurDTO.getCommissionTotale());
+        livreur.setEncaissementsTotaux(livreurDTO.getEncaissementsTotaux());
+        livreur.setDateDernierEncaissement(livreurDTO.getDateDernierEncaissement());
+
+        LivreurDTO livreurDTO1 = LivreurMapper.toDTO(livreur);
+
+        // Sauvegarde du livreur
+        LivreurDTO savedLivreur = clientService.save(livreurDTO1);
+
+        // Notification
+        Notification notification = new Notification();
+        notification.setMessage("Le livreur " + savedLivreur.getNom() + " " + savedLivreur.getPrenom() + " est créé");
+        notification.setIdObject(savedLivreur.getId());
+        notification.setObject("Livreur");
+        notificationRepository.save(notification);
+
+        return new ResponseEntity<>(savedLivreur, HttpStatus.CREATED);
     }
 
 

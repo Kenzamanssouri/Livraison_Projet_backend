@@ -3,11 +3,19 @@ package com.example.livraision_back.controller;
 import com.example.livraision_back.dto.AuthenticationRequest;
 import com.example.livraision_back.dto.AuthenticationResponse;
 import com.example.livraision_back.dto.ResetPasswordRequest;
+import com.example.livraision_back.model.Livreur;
+import com.example.livraision_back.model.Utilisateur;
+import com.example.livraision_back.model.Vendeur;
+import com.example.livraision_back.repository.AdminRepository;
+import com.example.livraision_back.repository.ClientRepository;
+import com.example.livraision_back.repository.LivreurRepository;
+import com.example.livraision_back.repository.VendeurRepository;
 import com.example.livraision_back.security.JwtUtil;
 import com.example.livraision_back.service.AdminAuthenticationProvider;
 import com.example.livraision_back.service.ClientAuthenticationProvider;
 import com.example.livraision_back.service.PasswordResetService;
 import com.example.livraision_back.service.impl.UserDetailsServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,12 +23,19 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    @Autowired private ClientRepository clientRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
+    @Autowired private VendeurRepository vendeurRepository;
+    @Autowired private LivreurRepository livreurRepository;
+    @Autowired
+    private AdminRepository adminRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
@@ -35,44 +50,69 @@ public class AuthController {
         this.adminAuthenticationProvider = adminAuthenticationProvider;
         this.clientAuthenticationProvider = clientAuthenticationProvider;
     }
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthenticationRequest request) {
         try {
-            // Sélectionner le AuthenticationProvider en fonction du rôle
-            Authentication authentication;
+            // 🔍 1️⃣ Rechercher l'utilisateur par login
+            Utilisateur user = findUserByLogin(request.getLogin());
 
-            if (request.getRole() == 0) {  // Client
-                authentication = clientAuthenticationProvider.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getMotDePasse())
-                );
-            } else if (request.getRole() == 3) {  // Admin
-                authentication = adminAuthenticationProvider.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getMotDePasse())
-                );
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Rôle inconnu");
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Aucun utilisateur trouvé avec ce login");
             }
 
-            // Si l'authentification est réussie, on charge les détails de l'utilisateur
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            // 🔑 2️⃣ Vérifier le mot de passe
+            if (!passwordEncoder.matches(request.getMotDePasse(), user.getMotDePasse())) {
+                throw new BadCredentialsException("Mot de passe incorrect");
+            }
 
-            // Générer un token JWT
-            String jwt = jwtUtil.generateToken(userDetails.getUsername());
+            // 🧩 3️⃣ Vérifier les conditions selon le type d'utilisateur
+            if (user instanceof Vendeur) {
+                Vendeur vendeur = (Vendeur) user;
+                if (Boolean.FALSE.equals(vendeur.getEstValideParAdmin())) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Votre compte vendeur n’a pas encore été validé par l’administrateur.");
+                }
+            }
 
-            // Retourner la réponse avec le token
-            return ResponseEntity.ok(new AuthenticationResponse(jwt));
+            if (user instanceof Livreur) {
+                Livreur livreur = (Livreur) user;
+                if (Boolean.FALSE.equals(livreur.getEstValideParAdmin())) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Votre compte livreur n’a pas encore été validé par l’administrateur.");
+                }
+            }
+
+            // ✅ 4️⃣ Générer le token JWT
+            String jwt = jwtUtil.generateToken(user.getLogin());
+
+            // ✅ 5️⃣ Retourner la réponse
+            return ResponseEntity.ok(new AuthenticationResponse(jwt, user.getRole().name(), user.getId()));
 
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identifiants invalides");
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur serveur");
         }
     }
 
 
 
-
+    /**
+     * 🔍 Recherche l'utilisateur dans chaque table.
+     */
+    private Utilisateur findUserByLogin(String login) {
+        if (adminRepository.findByLogin(login).isPresent())
+            return adminRepository.findByLogin(login).get();
+        if (clientRepository.findByLogin(login).isPresent())
+            return clientRepository.findByLogin(login).get();
+        if (vendeurRepository.findByLogin(login).isPresent())
+            return vendeurRepository.findByLogin(login).get();
+        if (livreurRepository.findByLogin(login).isPresent())
+            return livreurRepository.findByLogin(login).get();
+        return null;
+    }
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
         boolean success = passwordResetService.resetPassword(request.getTelephone(), request.getCode(), request.getNouveauMotDePasse());

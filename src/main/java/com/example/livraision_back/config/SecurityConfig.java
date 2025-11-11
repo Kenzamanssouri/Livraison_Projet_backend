@@ -77,8 +77,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // ⚡ Définit explicitement l'origine autorisée
-        config.setAllowedOrigins(List.of("http://localhost:8081"));
+        // ⚡ Définit explicitement les origines autorisées
+        config.setAllowedOrigins(List.of(
+            "http://localhost:8081",  // ancien port
+            "http://localhost:8083"   // ton frontend actuel
+        ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
@@ -89,6 +92,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
 
 
     // CompositeAuthenticationProvider to combine Admin and Client Authentication Providers
