@@ -60,12 +60,14 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Aucun utilisateur trouvé avec ce login");
             }
+            String mdpReq=request.getMotDePasse();
+            String mdpUser=user.getMotDePasse();
+            Boolean test=passwordEncoder.matches(request.getMotDePasse(), user.getMotDePasse());
 
             // 🔑 2️⃣ Vérifier le mot de passe
             if (!passwordEncoder.matches(request.getMotDePasse(), user.getMotDePasse())) {
                 throw new BadCredentialsException("Mot de passe incorrect");
             }
-
             // 🧩 3️⃣ Vérifier les conditions selon le type d'utilisateur
             if (user instanceof Vendeur) {
                 Vendeur vendeur = (Vendeur) user;

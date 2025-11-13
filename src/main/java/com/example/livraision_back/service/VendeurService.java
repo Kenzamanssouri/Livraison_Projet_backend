@@ -19,4 +19,6 @@ public interface VendeurService {
     Page<Vendeur> searchVendeurs(VendeurDTO filter, Pageable pageable);
 
      boolean existsByEmail(String email);
+    boolean existsByLogin(String login);
+
 }

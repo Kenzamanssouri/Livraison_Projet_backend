@@ -7,6 +7,7 @@ import com.example.livraision_back.model.Horaire;
 import com.example.livraision_back.model.Notification;
 import com.example.livraision_back.model.Vendeur;
 import com.example.livraision_back.repository.NotificationRepository;
+import com.example.livraision_back.repository.VendeurRepository;
 import com.example.livraision_back.service.VendeurService;
 import com.example.livraision_back.service.impl.EmailService;
 import org.springframework.data.domain.Page;
@@ -24,11 +25,13 @@ import java.util.List;
 @RequestMapping("/api/vendeurs")
 public class VendeurController {
     private final VendeurService clientService;
+    private final VendeurRepository clientRepository;
     private final NotificationRepository notificationRepository;
     private final EmailService emailService;
 
-    public VendeurController(VendeurService clientService, NotificationRepository notificationRepository, EmailService emailService) {
+    public VendeurController(VendeurService clientService, VendeurRepository clientRepository, NotificationRepository notificationRepository, EmailService emailService) {
         this.clientService = clientService;
+        this.clientRepository = clientRepository;
         this.notificationRepository = notificationRepository;
         this.emailService = emailService;
     }
@@ -37,7 +40,6 @@ public class VendeurController {
     // CREATE
     @PostMapping
     public ResponseEntity<?> createVendeur(@RequestBody VendeurDTO clientDTO) {
-        clientDTO.setEstValideParAdmin(null);
 
         // Vérifie si un client existe déjà avec le même email
         boolean exists = clientService.existsByEmail(clientDTO.getEmail());
@@ -46,7 +48,13 @@ public class VendeurController {
                 .status(HttpStatus.CONFLICT)
                 .body("An account with this email already exists.");
         }
-
+        // Vérifie si un compte existe déjà avec le même login
+        boolean loginExists = clientService.existsByLogin(clientDTO.getLogin());
+        if (loginExists) {
+            return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body("Un compte avec ce login existe déjà.");
+        }
         // Création de l'entité Vendeur
         Vendeur vendeur = new Vendeur();
         vendeur.setNom(clientDTO.getNom());
@@ -96,6 +104,7 @@ public class VendeurController {
 
         // Sauvegarde du vendeur
         Vendeur savedVendeur = clientService.save(vendeur);
+        emailService.sendCreationVendeur(savedVendeur.getEmail(), savedVendeur.getNom());
 
         // Notification
         Notification notification = new Notification();
@@ -159,8 +168,8 @@ public class VendeurController {
 
         if (client != null) {
             client.setEstValideParAdmin(true);
-            clientService.save(client);
-            emailService.sendValidationEmail(client.getEmail(), client.getNom());
+            clientRepository.save(client);
+            emailService.sendValidationEmailVendeur(client.getEmail(), client.getNom());
             return new ResponseEntity<>(client, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -174,7 +183,7 @@ public class VendeurController {
             client.setEstValideParAdmin(false);
             client.setMotifRejet(motif);
             clientService.save(client);
-            emailService.sendRefusEmail(client.getEmail(), client.getNom(),motif);
+            emailService.sendRefusEmailVendeur(client.getEmail(), client.getNom(),motif);
             return new ResponseEntity<>(client, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

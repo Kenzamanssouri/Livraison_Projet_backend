@@ -18,5 +18,6 @@ public interface VendeurRepository extends JpaRepository<Vendeur, Long>, JpaSpec
 
     Optional<Vendeur> findByTelephone(String telephone);
     boolean existsByEmail(String email);
+    boolean existsByLogin(String login);
 
 }

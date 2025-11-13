@@ -5,13 +5,12 @@ import com.example.livraision_back.mapper.LivreurMapper;
 import com.example.livraision_back.model.GeoLocalisation;
 import com.example.livraision_back.model.Livreur;
 import com.example.livraision_back.model.Notification;
-import com.example.livraision_back.model.Vendeur;
+import com.example.livraision_back.repository.LivreurRepository;
 import com.example.livraision_back.repository.NotificationRepository;
 import com.example.livraision_back.service.LivreurService;
 import com.example.livraision_back.service.impl.EmailService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +19,18 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/livreurs")
 public class LivreurController {
     private final LivreurService clientService;
+    private final LivreurRepository clientRepository;
     private final NotificationRepository notificationRepository;
     private final EmailService emailService;
+    private final LivreurMapper livreurMapper;
 
-    public LivreurController(LivreurService clientService, NotificationRepository notificationRepository, EmailService emailService) {
+
+    public LivreurController(LivreurService clientService, LivreurRepository clientRepository, NotificationRepository notificationRepository, EmailService emailService, LivreurMapper livreurMapper) {
         this.clientService = clientService;
+        this.clientRepository = clientRepository;
         this.notificationRepository = notificationRepository;
         this.emailService = emailService;
+        this.livreurMapper = livreurMapper;
     }
     @PostMapping
     public ResponseEntity<?> createLivreur(@RequestBody LivreurDTO livreurDTO) {
@@ -82,6 +86,7 @@ public class LivreurController {
 
         // Sauvegarde du livreur
         LivreurDTO savedLivreur = clientService.save(livreurDTO1);
+        emailService.sendCreationLivreur(savedLivreur.getEmail(), savedLivreur.getNom());
 
         // Notification
         Notification notification = new Notification();
@@ -95,18 +100,23 @@ public class LivreurController {
 
 
     @GetMapping("/{id}/accept")
-    public ResponseEntity<LivreurDTO> ValideVendeurById(@PathVariable Long id) {
-        LivreurDTO client = clientService.findById(id);
-
-        if (client != null) {
-            client.setEstValideParAdmin(true);
-            clientService.save(client);
-            emailService.sendValidationEmail(client.getEmail(), client.getNom());
-            return new ResponseEntity<>(client, HttpStatus.OK);
-        } else {
+    public ResponseEntity<LivreurDTO> validerLivreurById(@PathVariable Long id) {
+        LivreurDTO livreurDTO = clientService.findById(id);
+        if (livreurDTO == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+
+        // ✅ Appel direct de la méthode statique
+        Livreur livreur = LivreurMapper.toEntity(livreurDTO);
+        livreur.setEstValideParAdmin(true);
+
+        Livreur savedLivreur = clientRepository.save(livreur);
+        LivreurDTO savedLivreurDTO = LivreurMapper.toDTO(savedLivreur);
+
+        emailService.sendValidationEmailLivreur(savedLivreur.getEmail(), savedLivreur.getNom());
+        return new ResponseEntity<>(savedLivreurDTO, HttpStatus.OK);
     }
+
 
     @GetMapping("/{id}/refuse/{motif}")
     public ResponseEntity<LivreurDTO> refiuseVendeurById(@PathVariable Long id, @PathVariable String motif) {
@@ -116,7 +126,7 @@ public class LivreurController {
             client.setEstValideParAdmin(false);
             client.setMotifRejet(motif);
             clientService.save(client);
-            emailService.sendRefusEmail(client.getEmail(), client.getNom(),motif);
+            emailService.sendRefusEmailLivreur(client.getEmail(), client.getNom(),motif);
 
             return new ResponseEntity<>(client, HttpStatus.OK);
         } else {

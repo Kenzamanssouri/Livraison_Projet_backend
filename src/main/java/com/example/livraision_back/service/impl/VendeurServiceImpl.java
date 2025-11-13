@@ -159,5 +159,8 @@ public class VendeurServiceImpl implements VendeurService {
     public boolean existsByEmail(String email) {
         return clientRepository.existsByEmail(email);
     }
-
+    @Override
+    public boolean existsByLogin(String login) {
+        return clientRepository.existsByLogin(login);
+    }
 }
