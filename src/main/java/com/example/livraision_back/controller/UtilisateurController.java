@@ -201,7 +201,7 @@ public class UtilisateurController {
 
         List<UtilisateurDTO> utilisateurs = new ArrayList<>();
 
-        vendeurRepository.findAllByEstValideParAdminIsNullOrEstValideParAdminFalse().forEach(vendeur -> {
+        vendeurRepository.findAllByEstValideParAdminIsNull().forEach(vendeur -> {
             VendeurDTO dto = new VendeurDTO();
             dto.setId(vendeur.getId());
             dto.setNom(vendeur.getNom());
@@ -223,7 +223,7 @@ public class UtilisateurController {
             utilisateurs.add(dto);
         });
 
-        livreurRepository.findAllByEstValideParAdminIsNullOrEstValideParAdminFalse().forEach(livreur -> {
+        livreurRepository.findAllByEstValideParAdminIsNull().forEach(livreur -> {
             LivreurDTO dto = new LivreurDTO();
             dto.setId(livreur.getId());
             dto.setNom(livreur.getNom());

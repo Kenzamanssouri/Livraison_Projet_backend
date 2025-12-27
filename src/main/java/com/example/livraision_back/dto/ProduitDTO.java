@@ -11,7 +11,8 @@ public class ProduitDTO {
     private String description;
     private Double prix;
     private String image;
-    private Long vendeurId;
+    private VendeurDTO vendeur;
     private List<OptionProduitDTO> options;
-    private Long categorieId;
+    private CategorieProduitDTO categorie;
+    private Boolean actif;
 }

@@ -1,15 +1,22 @@
 package com.example.livraision_back.service.impl;
 
 import com.example.livraision_back.dto.CommandeDTO;
+import com.example.livraision_back.dto.DashboardVendeurResponse;
 import com.example.livraision_back.mapper.CommandeMapper;
 import com.example.livraision_back.model.Commande;
+import com.example.livraision_back.model.StatutCommande;
 import com.example.livraision_back.repository.CommandeRepository;
 import com.example.livraision_back.service.CommandeService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,6 +56,73 @@ public class CommandeServiceImpl implements CommandeService {
 
         return dtoList;
     }
+    @Override
+    public DashboardVendeurResponse getDashboard(Long vendeurId) {
+        DashboardVendeurResponse dto = new DashboardVendeurResponse();
 
+        // === 1) Dates utiles ===
+        ZoneId zone = ZoneId.systemDefault(); // adapte si tu veux ZoneId.of("Africa/Casablanca")
 
+        LocalDate today = LocalDate.now(zone);
+        LocalDateTime startOfToday = today.atStartOfDay();
+        LocalDateTime endOfToday = startOfToday.plusDays(1);
+
+        // Lundi de la semaine courante
+        LocalDate startOfWeekDate = today.with(java.time.DayOfWeek.MONDAY);
+        LocalDateTime startOfWeek = startOfWeekDate.atStartOfDay();
+        LocalDateTime endOfWeek = startOfWeek.plusWeeks(1);
+
+        // === 2) Volume commandes ===
+        Long total = commandeRepository.countByVendeur_Id(vendeurId);
+        Long todayCount = commandeRepository.countByVendeur_IdAndDateCommandeBetween(
+            vendeurId, startOfToday, endOfToday);
+        Long weekCount = commandeRepository.countByVendeur_IdAndDateCommandeBetween(
+            vendeurId, startOfWeek, endOfWeek);
+
+        dto.setTotalCommandes(total);
+        dto.setToday(todayCount);
+        dto.setWeek(weekCount);
+
+        // === 3) Statuts ===
+        Map<String, Long> statusMap = new HashMap<>();
+        for (StatutCommande statut : StatutCommande.values()) {
+            Long count = commandeRepository.countByVendeur_IdAndStatut(vendeurId, statut);
+            statusMap.put(statut.name(), count);
+        }
+        dto.setStatus(statusMap);
+
+        // === 4) Revenus ===
+        Double revenueTotal = commandeRepository.sumTotalByVendeur(vendeurId);
+        Double revenueToday = commandeRepository.sumTotalByVendeurAndDateBetween(
+            vendeurId, startOfToday, endOfToday);
+        Double revenueWeek = commandeRepository.sumTotalByVendeurAndDateBetween(
+            vendeurId, startOfWeek, endOfWeek);
+        Double avgBasket = commandeRepository.avgTotalByVendeur(vendeurId);
+
+        dto.setRevenueTotal(revenueTotal);
+        dto.setRevenueToday(revenueToday);
+        dto.setRevenueWeek(revenueWeek);
+        dto.setAvgBasket(avgBasket);
+
+        // === 5) Moyens de paiement (en %) ===
+        Long cashCount = commandeRepository.countByVendeur_IdAndModePaiement(vendeurId, "CASH");
+        Long cardCount = commandeRepository.countByVendeur_IdAndModePaiement(vendeurId, "CARTE");
+
+        long totalPaid = (cashCount != null ? cashCount : 0L)
+            + (cardCount != null ? cardCount : 0L);
+
+        DashboardVendeurResponse.PaymentStatsDTO paymentStats = new DashboardVendeurResponse.PaymentStatsDTO();
+        if (totalPaid > 0) {
+            double cashPercent = (cashCount * 100.0) / totalPaid;
+            double cardPercent = (cardCount * 100.0) / totalPaid;
+            paymentStats.setCash(cashPercent);
+            paymentStats.setCard(cardPercent);
+        } else {
+            paymentStats.setCash(0.0);
+            paymentStats.setCard(0.0);
+        }
+        dto.setPaymentStats(paymentStats);
+
+        return dto;
+    }
 }

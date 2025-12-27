@@ -2,20 +2,25 @@ package com.example.livraision_back.service.impl;
 
 import com.example.livraision_back.dto.HoraireDTO;
 import com.example.livraision_back.dto.VendeurDTO;
+import com.example.livraision_back.dto.VendeurUpdateDTO;
 import com.example.livraision_back.model.CategorieVendeur;
 import com.example.livraision_back.model.Horaire;
 import com.example.livraision_back.model.Vendeur;
 import com.example.livraision_back.repository.VendeurRepository;
 import com.example.livraision_back.service.VendeurService;
 import com.example.livraision_back.specification.VendeurSpecification;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class VendeurServiceImpl implements VendeurService {
@@ -126,6 +131,77 @@ public class VendeurServiceImpl implements VendeurService {
         } else {
             return null;
         }
+    }
+
+    @Override
+    @Transactional
+    public void updateProfil(Long id, VendeurUpdateDTO dto) {
+
+        Vendeur vendeur = clientRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Vendeur introuvable"));
+
+        // ================= LOGIN UNIQUE =================
+        if (dto.getLogin() != null &&
+            !dto.getLogin().equals(vendeur.getLogin())) {
+
+            clientRepository.findByLogin(dto.getLogin())
+                .ifPresent(v -> {
+                    throw new RuntimeException("Login déjà utilisé");
+                });
+
+            vendeur.setLogin(dto.getLogin());
+        }
+
+        // ================= HORAIRES =================
+        if (dto.getHorairesOuverture() != null) {
+
+            // Map des horaires existants (id -> Horaire)
+            Map<Long, Horaire> existants = vendeur.getHorairesOuverture()
+                .stream()
+                .filter(h -> h.getId() != null)
+                .collect(Collectors.toMap(Horaire::getId, h -> h));
+
+            List<Horaire> nouveauxHoraires = new ArrayList<>();
+
+            for (HoraireDTO hDto : dto.getHorairesOuverture()) {
+
+                // ---------- UPDATE ----------
+                if (hDto.getId() != null && existants.containsKey(hDto.getId())) {
+                    Horaire h = existants.get(hDto.getId());
+                    h.setJour(hDto.getJour());
+                    h.setHeureOuverture(hDto.getHeureOuverture());
+                    h.setHeureFermeture(hDto.getHeureFermeture());
+                    nouveauxHoraires.add(h);
+                }
+                // ---------- INSERT ----------
+                else {
+                    Horaire h = new Horaire();
+                    h.setJour(hDto.getJour());
+                    h.setHeureOuverture(hDto.getHeureOuverture());
+                    h.setHeureFermeture(hDto.getHeureFermeture());
+                    h.setVendeur(vendeur);
+                    nouveauxHoraires.add(h);
+                }
+            }
+
+            // ---------- DELETE ----------
+            vendeur.getHorairesOuverture().clear();
+            vendeur.getHorairesOuverture().addAll(nouveauxHoraires);
+        }
+
+        // ================= AUTRES CHAMPS =================
+        vendeur.setNom(dto.getNom());
+        vendeur.setPrenom(dto.getPrenom());
+        vendeur.setTelephone(dto.getTelephone());
+        vendeur.setAdresse(dto.getAdresse());
+        vendeur.setNomEtablissement(dto.getNomEtablissement());
+
+        // ================= MOT DE PASSE =================
+        if (dto.getMotDePasse() != null && !dto.getMotDePasse().isBlank()) {
+            vendeur.setMotDePasse(passwordEncoder.encode(dto.getMotDePasse()));
+        }
+
+        clientRepository.save(vendeur);
     }
 
 

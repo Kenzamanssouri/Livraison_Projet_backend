@@ -11,4 +11,5 @@ public interface PieceJointeService {
     List<PieceJointe> getByPlanActionId(Long planActionId, String typePjPlanAction);
     List<PieceJointe> getByType(String typePjPlanAction);
     void deletePieceJointe(Long id);
+    PieceJointe getById(Long id);
 }

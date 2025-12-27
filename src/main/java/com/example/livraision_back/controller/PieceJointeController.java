@@ -78,6 +78,35 @@ public class PieceJointeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    @GetMapping("/download/id/{id}")
+    public ResponseEntity<Resource> downloadFileById(@PathVariable Long id) {
+        try {
+            PieceJointe pj = pieceJointeService.getById(id);
+            if (pj == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Récupérer le vrai nom de fichier depuis l’URL enregistrée
+            String filename = Paths.get(pj.getUrl()).getFileName().toString();
+            Path fileStorageLocation = Paths.get("uploads").toAbsolutePath().normalize();
+            Path filePath = fileStorageLocation.resolve(filename).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (!resource.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"" + pj.getName() + "\"")
+                .body(resource);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @DeleteMapping("/pieces-jointes/{id}")
     public ResponseEntity<Void> deletePieceJointe(@PathVariable Long id) {
         pieceJointeService.deletePieceJointe(id);

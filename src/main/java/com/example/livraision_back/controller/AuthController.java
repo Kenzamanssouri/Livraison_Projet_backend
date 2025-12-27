@@ -71,7 +71,9 @@ public class AuthController {
             // 🧩 3️⃣ Vérifier les conditions selon le type d'utilisateur
             if (user instanceof Vendeur) {
                 Vendeur vendeur = (Vendeur) user;
-                if (Boolean.FALSE.equals(vendeur.getEstValideParAdmin())) {
+                if (!Boolean.TRUE.equals(vendeur.getEstValideParAdmin())) {
+                    // false ou null
+
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Votre compte vendeur n’a pas encore été validé par l’administrateur.");
                 }
@@ -79,7 +81,7 @@ public class AuthController {
 
             if (user instanceof Livreur) {
                 Livreur livreur = (Livreur) user;
-                if (Boolean.FALSE.equals(livreur.getEstValideParAdmin())) {
+                if (!Boolean.TRUE.equals(livreur.getEstValideParAdmin())) {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Votre compte livreur n’a pas encore été validé par l’administrateur.");
                 }

@@ -1,6 +1,7 @@
 package com.example.livraision_back.controller;
 
 import com.example.livraision_back.dto.CommandeDTO;
+import com.example.livraision_back.dto.DashboardVendeurResponse;
 import com.example.livraision_back.model.Client;
 import com.example.livraision_back.model.Commande;
 import com.example.livraision_back.model.StatutCommande;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -62,4 +64,11 @@ public class CommandeController {
             "totalOrders", totalOrders
         ));
     }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<DashboardVendeurResponse> getDashboard(@RequestParam Long vendeurId) {
+        DashboardVendeurResponse dashboard = commandeService.getDashboard(vendeurId);
+        return ResponseEntity.ok(dashboard);
+    }
+
 }

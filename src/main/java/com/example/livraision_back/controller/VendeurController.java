@@ -2,6 +2,8 @@ package com.example.livraision_back.controller;
 
 import com.example.livraision_back.dto.HoraireDTO;
 import com.example.livraision_back.dto.VendeurDTO;
+import com.example.livraision_back.dto.VendeurUpdateDTO;
+import com.example.livraision_back.mapper.VendeurMapper;
 import com.example.livraision_back.model.CategorieVendeur;
 import com.example.livraision_back.model.Horaire;
 import com.example.livraision_back.model.Notification;
@@ -25,12 +27,14 @@ import java.util.List;
 @RequestMapping("/api/vendeurs")
 public class VendeurController {
     private final VendeurService clientService;
+    private final VendeurMapper vendeurMapper;
     private final VendeurRepository clientRepository;
     private final NotificationRepository notificationRepository;
     private final EmailService emailService;
 
-    public VendeurController(VendeurService clientService, VendeurRepository clientRepository, NotificationRepository notificationRepository, EmailService emailService) {
+    public VendeurController(VendeurService clientService, VendeurMapper vendeurMapper, VendeurRepository clientRepository, NotificationRepository notificationRepository, EmailService emailService) {
         this.clientService = clientService;
+        this.vendeurMapper = vendeurMapper;
         this.clientRepository = clientRepository;
         this.notificationRepository = notificationRepository;
         this.emailService = emailService;
@@ -153,14 +157,17 @@ public class VendeurController {
 
     // READ - Get client by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Vendeur> getVendeurById(@PathVariable Long id) {
-        Vendeur client = clientService.findById(id);
-        if (client != null) {
-            return new ResponseEntity<>(client, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<VendeurDTO> getVendeurById(@PathVariable Long id) {
+
+        Vendeur vendeur = clientService.findById(id);
+
+        if (vendeur == null) {
+            return ResponseEntity.notFound().build();
         }
+
+        return ResponseEntity.ok(vendeurMapper.toDto(vendeur));
     }
+
     // Valide
     @GetMapping("/{id}/accept")
     public ResponseEntity<Vendeur> ValideVendeurById(@PathVariable Long id) {
@@ -191,14 +198,14 @@ public class VendeurController {
     }
     // UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<Vendeur> updateVendeur(@PathVariable Long id, @RequestBody VendeurDTO clientDTO) {
-        Vendeur updatedVendeur = clientService.update(id, clientDTO);
-        if (updatedVendeur != null) {
-            return new ResponseEntity<>(updatedVendeur, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<Void> updateVendeur(
+        @PathVariable Long id,
+        @RequestBody VendeurUpdateDTO dto
+    ) {
+        clientService.updateProfil(id, dto);
+        return ResponseEntity.ok().build();
     }
+
 
     // DELETE
     @DeleteMapping("/{id}")

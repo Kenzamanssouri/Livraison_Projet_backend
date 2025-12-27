@@ -16,7 +16,7 @@ public interface LivreurRepository extends JpaRepository<Livreur, Long> {
     boolean existsByEmail(String email);
     boolean existsByLogin(String login);
 
-    List<Livreur> findAllByEstValideParAdminIsNullOrEstValideParAdminFalse();
+    List<Livreur> findAllByEstValideParAdminIsNull();
 
 
 }

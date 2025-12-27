@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface VendeurRepository extends JpaRepository<Vendeur, Long>, JpaSpecificationExecutor<Vendeur> {
     Optional<Vendeur> findByLogin(String login);
 
-    List<Vendeur> findAllByEstValideParAdminIsNullOrEstValideParAdminFalse();
+    List<Vendeur> findAllByEstValideParAdminIsNull();
 
     Optional<Vendeur> findByEmail(String email);
 

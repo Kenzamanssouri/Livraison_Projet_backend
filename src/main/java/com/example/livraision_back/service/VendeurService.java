@@ -1,6 +1,7 @@
 package com.example.livraision_back.service;
 
 import com.example.livraision_back.dto.VendeurDTO;
+import com.example.livraision_back.dto.VendeurUpdateDTO;
 import com.example.livraision_back.model.Vendeur;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ public interface VendeurService {
 
     Vendeur findById(Long id);
     Vendeur update(Long id, VendeurDTO dto);
+    void updateProfil(Long id, VendeurUpdateDTO dto);
     boolean delete(Long id);
 
     Page<Vendeur> searchVendeurs(VendeurDTO filter, Pageable pageable);

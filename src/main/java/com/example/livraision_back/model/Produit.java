@@ -25,6 +25,7 @@ public class Produit {
 
     @ManyToOne
     private CategorieProduit categorie;
+    private Boolean actif = true;
 
     // Getters and Setters
 }

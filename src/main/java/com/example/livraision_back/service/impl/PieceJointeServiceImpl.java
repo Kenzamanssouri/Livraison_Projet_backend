@@ -48,7 +48,7 @@ public class PieceJointeServiceImpl implements PieceJointeService {
         return pieceJointeRepository.save(pj);
     }
     public List<PieceJointe> getByPlanActionId(Long planActionId, String typePjPlanAction) {
-        return pieceJointeRepository.findByIdObjetAndTypePj(planActionId,typePjPlanAction);
+        return pieceJointeRepository.findByIdObjetAndTypePjStartingWith(planActionId,typePjPlanAction);
     }
     public List<PieceJointe> getByType(String typePjPlanAction) {
         return pieceJointeRepository.findByTypePj(typePjPlanAction);
@@ -82,4 +82,8 @@ public class PieceJointeServiceImpl implements PieceJointeService {
             throw new RuntimeException("PieceJointe not found with id: " + id);
         }
     }
+    public PieceJointe getById(Long id) {
+        return pieceJointeRepository.findById(id).orElse(null);
+    }
+
 }
