@@ -67,4 +67,14 @@ public class ProduitController {
         boolean status = produitService.toggle(id);
         return ResponseEntity.ok(Map.of("active", status));
     }
+    @PostMapping(value = "/import/{vendeurId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> importProduits(@RequestParam("file") MultipartFile file,@PathVariable Long vendeurId) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("Fichier vide");
+        }
+
+        produitService.importExcel(file,vendeurId);
+        return ResponseEntity.ok("Import Excel terminé avec succès");
+    }
 }

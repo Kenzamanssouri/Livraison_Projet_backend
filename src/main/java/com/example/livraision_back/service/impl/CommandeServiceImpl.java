@@ -3,13 +3,18 @@ package com.example.livraision_back.service.impl;
 import com.example.livraision_back.dto.CommandeDTO;
 import com.example.livraision_back.dto.DashboardVendeurResponse;
 import com.example.livraision_back.mapper.CommandeMapper;
-import com.example.livraision_back.model.Commande;
-import com.example.livraision_back.model.StatutCommande;
+import com.example.livraision_back.model.*;
+import com.example.livraision_back.repository.ClientRepository;
 import com.example.livraision_back.repository.CommandeRepository;
+import com.example.livraision_back.repository.NotificationRepository;
 import com.example.livraision_back.service.CommandeService;
+import com.example.livraision_back.service.PushNotificationService;
+import com.example.livraision_back.specification.CommandeSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,11 +28,17 @@ import java.util.stream.Collectors;
 
 public class CommandeServiceImpl implements CommandeService {
     private final CommandeRepository commandeRepository;
+    private final PushNotificationService pushService; // Le service qu'on va créer juste en dessous
+    private final ClientRepository clientRepository;
     private final CommandeMapper commandeMapper;
+    private final NotificationRepository notificationRepository;
 
-    public CommandeServiceImpl(CommandeRepository commandeRepository, CommandeMapper commandeMapper) {
+    public CommandeServiceImpl(CommandeRepository commandeRepository, PushNotificationService pushService, ClientRepository clientRepository, CommandeMapper commandeMapper, NotificationRepository notificationRepository) {
         this.commandeRepository = commandeRepository;
+        this.pushService = pushService;
+        this.clientRepository = clientRepository;
         this.commandeMapper = commandeMapper;
+        this.notificationRepository = notificationRepository;
     }
 
     @Override
@@ -125,4 +136,84 @@ public class CommandeServiceImpl implements CommandeService {
 
         return dto;
     }
+    // Méthode pour créer une commande texte libre
+    public Commande creerCommandeTexteLibre(String loginClient, String texteLibre, String adresseLivraison) {
+
+        // Récupérer le client
+        Client u = clientRepository.findByLogin(loginClient)
+            .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+
+
+        // Créer la ligneCommande
+        LigneCommande ligne = new LigneCommande();
+        ligne.setDescriptionLibre(texteLibre);
+        ligne.setQuantite(1);
+        ligne.setPrixUnitaire(0);
+
+        // Créer la commande
+        Commande commande = new Commande();
+        commande.setClient(u);
+        commande.setDateCommande(java.time.LocalDateTime.now());
+        commande.setStatut(StatutCommande.EN_ATTENTE);
+        commande.setLivraisonAdresse(adresseLivraison);
+        commande.setLignes(java.util.List.of(ligne));
+        commandeRepository.save(commande);
+        Notification notif = new Notification();
+        notif.setObject("Nouvelle commande");
+        notif.setMessage("Nouvelle commande à livrer (#" + commande.getId() + ")");
+        notif.setRole(RoleUtilisateur.LIVREUR);
+        notif.setIdObject(commande.getId());
+        notif.setOpened(false);
+
+        notificationRepository.save(notif);
+        // --- AJOUT POUR LE PUSH MOBILE ---
+        // On envoie au "topic" livreurs. Tous les livreurs abonnés le recevront.
+        pushService.sendPushToTopic(
+            "livreurs",
+            "Nouvelle commande !",
+            "Une nouvelle commande est disponible à l'adresse : " + adresseLivraison
+        );
+        return commande;
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public CommandeDTO findById(Long id) {
+
+        Commande commande = commandeRepository.findByIdWithLignes(id)
+            .orElseThrow(() ->
+                new RuntimeException("Commande introuvable avec id : " + id)
+            );
+        commande.getLignes().forEach(l ->
+            System.out.println("DESC = " + l.getDescriptionLibre())
+        );
+
+        return commandeMapper.toDTO(commande);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CommandeDTO> findByLivreur(Long livreurId) {
+        return commandeRepository.findByLivreur_Id(livreurId)
+            .stream()
+            .map(commandeMapper::toLivreurDTO)
+            .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CommandeDTO> findByLivreurOrStatut(
+        Long livreurId,
+        StatutCommande statut
+    ) {
+        Specification<Commande> spec =
+            CommandeSpecification.livreurOrStatut(livreurId, statut);
+
+        return commandeRepository.findAll(spec)
+            .stream()
+            .map(commandeMapper::toLivreurDTO)
+            .toList();
+    }
+
+
 }

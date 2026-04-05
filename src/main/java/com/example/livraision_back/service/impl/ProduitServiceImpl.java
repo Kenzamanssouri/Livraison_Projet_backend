@@ -10,10 +10,20 @@ import com.example.livraision_back.repository.ProduitRepository;
 import com.example.livraision_back.repository.VendeurRepository;
 import com.example.livraision_back.service.FileStorageService;
 import com.example.livraision_back.service.ProduitService;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProduitServiceImpl implements ProduitService {
@@ -129,5 +139,63 @@ public class ProduitServiceImpl implements ProduitService {
         produitRepository.save(produit);
 
         return produit.getActif();
+    }
+    public void importExcel(MultipartFile file, Long vendeurId) {
+
+        try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+
+            Vendeur vendeur = vendeurRepository.findById(vendeurId)
+                .orElseThrow(() -> new RuntimeException("Vendeur introuvable"));
+
+            Sheet sheet = workbook.getSheetAt(0);
+            List<Produit> produits = new ArrayList<>();
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                Produit produit = new Produit();
+
+                produit.setNom(getString(row.getCell(0)));
+                produit.setDescription(getString(row.getCell(1)));
+                produit.setPrix(getDouble(row.getCell(2)));
+                produit.setVendeur(vendeur);
+
+                // 🔹 CATEGORIE
+                String categorieNom = getString(row.getCell(3));
+
+                if (categorieNom != null) {
+                    CategorieProduit categorie = categorieRepository
+                        .findByNom(categorieNom)
+                        .orElseThrow(() ->
+                            new RuntimeException(
+                                "Catégorie '" + categorieNom
+                            )
+                        );
+
+                    produit.setCategorie(categorie);
+                }
+
+                produits.add(produit);
+            }
+
+            produitRepository.saveAll(produits);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de l'import Excel", e);
+        }
+    }
+
+    private String getString(Cell cell) {
+        return cell == null ? null : cell.getStringCellValue().trim();
+    }
+
+    private Double getDouble(Cell cell) {
+        return cell == null ? null : cell.getNumericCellValue();
+    }
+
+    private Integer getInteger(Cell cell) {
+        return cell == null ? null : (int) cell.getNumericCellValue();
     }
 }

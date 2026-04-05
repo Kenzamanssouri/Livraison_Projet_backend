@@ -15,5 +15,7 @@ public class Notification {
     private Long idObject;
     private String Object;
     private Boolean opened = false; // <-- New field
+    @Enumerated(EnumType.STRING)
+    private RoleUtilisateur role;
 
 }

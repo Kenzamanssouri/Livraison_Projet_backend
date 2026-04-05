@@ -64,7 +64,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeRequests(auth -> auth
-                .requestMatchers("/api/auth/**","/api/uploadPj1/**", "/api/clients/**", "/api/produits/**", "/api/categories/**", "/api/vendeurs/**", "/api/livreurs/**", "/api/commandes/**", "/api/utilisateurs/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/pieces-justificatives-vendeurs/**","/api/notification/**","/api/parametres/**")
+                .requestMatchers("/api/auth/**","/api/uploadPj1/**","/api/download/**", "/api/clients/**", "/api/produits/**", "/api/categories/**", "/api/vendeurs/**", "/api/livreurs/**", "/api/commandes/**", "/api/utilisateurs/**", "/swagger-ui/**", "/v3/api-docs/**", "/api/pieces-justificatives-vendeurs/**","/api/notification/**","/api/parametres/**")
                 .permitAll()
                 .anyRequest().authenticated()
             )

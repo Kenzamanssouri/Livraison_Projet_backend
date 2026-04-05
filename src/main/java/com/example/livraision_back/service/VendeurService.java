@@ -22,5 +22,6 @@ public interface VendeurService {
 
      boolean existsByEmail(String email);
     boolean existsByLogin(String login);
+    boolean toggle(Long id);
 
 }

@@ -1,10 +1,15 @@
 package com.example.livraision_back.service.impl;
 
 import com.example.livraision_back.dto.CategorieProduitDTO;
+import com.example.livraision_back.dto.ProduitDTO;
 import com.example.livraision_back.mapper.CategorieProduitMapper;
 import com.example.livraision_back.model.CategorieProduit;
+import com.example.livraision_back.model.Produit;
 import com.example.livraision_back.repository.CategorieProduitRepository;
 import com.example.livraision_back.service.CategorieProduitService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -71,6 +76,22 @@ public class CategorieProduitServiceImpl implements CategorieProduitService {
             .stream()
             .map(mapper::toDto)
             .collect(Collectors.toList());
+    }
+    @Override
+    public Page<CategorieProduitDTO> getPaged(int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<CategorieProduit> results;
+
+      //  if (search != null && !search.isBlank()) {
+      //      results = produitRepository
+      //          .findByVendeurIdAndNomContainingIgnoreCase(vendeurId, search, pageable);
+      //  } else {
+            results = repository.findAll(pageable);
+        //}
+        Page<CategorieProduitDTO> categorieProduitDTOS=results.map(mapper::toDto);
+        return results.map(mapper::toDto);
     }
 
     @Override

@@ -1,9 +1,11 @@
 package com.example.livraision_back.repository;
 
+import com.example.livraision_back.dto.CommandeDTO;
 import com.example.livraision_back.model.Commande;
 import com.example.livraision_back.model.StatutCommande;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +13,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CommandeRepository extends JpaRepository<Commande, Long>, JpaSpecificationExecutor<Commande> {
@@ -62,5 +66,11 @@ public interface CommandeRepository extends JpaRepository<Commande, Long>, JpaSp
 
     // Nombre commandes par mode de paiement
     Long countByVendeur_IdAndModePaiement(Long vendeurId, String modePaiement);
-
+    @EntityGraph(attributePaths = {
+        "lignes",
+        "lignes.produit"
+    })
+    @Query("select c from Commande c where c.id = :id")
+    Optional<Commande> findByIdWithLignes(@Param("id") Long id);
+    List<Commande> findByLivreur_Id(Long livreurId);
 }

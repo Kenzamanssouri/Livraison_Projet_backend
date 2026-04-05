@@ -20,6 +20,8 @@ public class LigneCommande {
 
     @ElementCollection
     private List<String> optionsChoisies;
-
+    // 🔥 Nouveau champ pour MVP : texte libre envoyé par le client
+    @Column(length = 1000)
+    private String descriptionLibre;
     // Getters and Setters
 }

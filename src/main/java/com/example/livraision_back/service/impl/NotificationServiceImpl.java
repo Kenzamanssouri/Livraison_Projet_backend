@@ -5,6 +5,7 @@ package com.example.livraision_back.service.impl;
 import com.example.livraision_back.dto.NotificationDTO;
 import com.example.livraision_back.mapper.NotificationMapper;
 import com.example.livraision_back.model.Notification;
+import com.example.livraision_back.model.RoleUtilisateur;
 import com.example.livraision_back.repository.NotificationRepository;
 import com.example.livraision_back.service.NotificationService;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -13,7 +14,8 @@ import com.google.firebase.messaging.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @Service
@@ -43,6 +45,25 @@ public class NotificationServiceImpl implements NotificationService {
     }
     public Notification save(Notification notification){
         return notificationRepository.save(notification);
+    }
+    @Override
+    public List<Notification> findByRoleAndLuFalse(RoleUtilisateur role){
+        return notificationRepository.findByRoleAndOpenedFalse(role);
+    }
+
+    public Page<NotificationDTO> findByRole(RoleUtilisateur role, Pageable pageable) {
+        return notificationRepository
+            .findByRole(role, pageable)
+            .map(clientMapper::toDTO);
+    }
+
+    public Page<NotificationDTO> findByRoleAndLuFalse(RoleUtilisateur role, Pageable pageable) {
+        return notificationRepository
+            .findByRoleAndOpenedFalse(role, pageable)
+            .map(clientMapper::toDTO);
+    }
+    public long countUnread(RoleUtilisateur role) {
+        return notificationRepository.countByRoleAndOpenedFalse(role);
     }
 }
 

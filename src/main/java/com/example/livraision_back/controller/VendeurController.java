@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vendeurs")
@@ -184,7 +185,7 @@ public class VendeurController {
     }
     // refuse
     @GetMapping("/{id}/refuse/{motif}")
-    public ResponseEntity<Vendeur> refiuseVendeurById(@PathVariable Long id,@PathVariable String motif) {
+    public ResponseEntity<Vendeur> refuseVendeurById(@PathVariable Long id,@PathVariable String motif) {
         Vendeur client = clientService.findById(id);
         if (client != null) {
             client.setEstValideParAdmin(false);
@@ -228,5 +229,10 @@ public class VendeurController {
         Page<Vendeur> result = clientService.searchVendeurs(filter, pageable);
         return ResponseEntity.ok(result);
     }
-
+    // 🔄 ACTIVER / DESACTIVER VENDEUR
+    @PutMapping("/{id}/toggle")
+    public ResponseEntity<?> toggle(@PathVariable Long id) {
+        boolean status = clientService.toggle(id);
+        return ResponseEntity.ok(Map.of("active", status));
+    }
 }

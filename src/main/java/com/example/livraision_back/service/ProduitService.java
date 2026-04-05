@@ -17,4 +17,5 @@ public interface ProduitService {
     void delete(Long id);
 
     boolean toggle(Long id);
+    void importExcel(MultipartFile file,Long vendeurId);
 }

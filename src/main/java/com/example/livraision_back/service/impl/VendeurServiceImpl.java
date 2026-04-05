@@ -5,6 +5,7 @@ import com.example.livraision_back.dto.VendeurDTO;
 import com.example.livraision_back.dto.VendeurUpdateDTO;
 import com.example.livraision_back.model.CategorieVendeur;
 import com.example.livraision_back.model.Horaire;
+import com.example.livraision_back.model.Produit;
 import com.example.livraision_back.model.Vendeur;
 import com.example.livraision_back.repository.VendeurRepository;
 import com.example.livraision_back.service.VendeurService;
@@ -238,5 +239,18 @@ public class VendeurServiceImpl implements VendeurService {
     @Override
     public boolean existsByLogin(String login) {
         return clientRepository.existsByLogin(login);
+    }
+
+
+    @Override
+    public boolean toggle(Long id) {
+
+        Vendeur produit = clientRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Produit introuvable"));
+
+        produit.setBloque(Boolean.TRUE);
+        clientRepository.save(produit);
+
+        return produit.getBloque();
     }
 }

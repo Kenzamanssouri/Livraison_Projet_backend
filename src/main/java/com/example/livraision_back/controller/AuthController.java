@@ -77,6 +77,14 @@ public class AuthController {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body("Votre compte vendeur n’a pas encore été validé par l’administrateur.");
                 }
+
+
+                if (Boolean.TRUE.equals(vendeur.getBloque())) {
+                    // false ou null
+
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Votre compte vendeur est bloque.");
+                }
             }
 
             if (user instanceof Livreur) {

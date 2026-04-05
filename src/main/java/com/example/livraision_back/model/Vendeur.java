@@ -22,9 +22,14 @@ public class Vendeur extends Utilisateur {
     private Boolean estValideParAdmin;
     private String motifRejet;
 
-    @OneToMany(mappedBy = "vendeur", cascade = CascadeType.ALL)
+    @OneToMany(
+        mappedBy = "vendeur",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     @JsonManagedReference
-    private List<Horaire> horairesOuverture;
+    private List<Horaire> horairesOuverture = new ArrayList<>();
+
 
     @OneToMany(mappedBy = "vendeur")
     private List<Produit> produits;

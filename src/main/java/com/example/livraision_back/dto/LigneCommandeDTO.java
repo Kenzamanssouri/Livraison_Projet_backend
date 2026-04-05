@@ -10,4 +10,6 @@ public class LigneCommandeDTO {
     private int quantite;
     private double prixUnitaire;
     private List<String> optionsChoisies;
+    private String descriptionLibre;
+
 }

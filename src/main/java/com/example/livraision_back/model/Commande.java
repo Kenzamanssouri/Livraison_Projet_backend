@@ -1,5 +1,6 @@
 package com.example.livraision_back.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -14,6 +15,8 @@ public class Commande {
     private Long id;
 
     @ManyToOne
+    @JsonBackReference // ← côté enfant, sera ignoré lors de la sérialisation
+
     private Client client;
 
     @ManyToOne

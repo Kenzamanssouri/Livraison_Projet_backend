@@ -1,7 +1,9 @@
 package com.example.livraision_back.controller;
 
 import com.example.livraision_back.dto.CategorieProduitDTO;
+import com.example.livraision_back.dto.ProduitDTO;
 import com.example.livraision_back.service.CategorieProduitService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +52,13 @@ public class CategorieProduitController {
     public ResponseEntity<List<CategorieProduitDTO>> getAll() {
 
         return ResponseEntity.ok(categorieProduitService.getAll());
+    }
+    @GetMapping("/paged")
+    public ResponseEntity<Page<CategorieProduitDTO>> getPaged(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "5") int size) {
+
+        return ResponseEntity.ok(categorieProduitService.getPaged( page, size));
     }
 
     // 🔹 DELETE
